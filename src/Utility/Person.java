@@ -1,0 +1,67 @@
+package Utility;
+
+public class Person {
+	
+	private String firstname;
+	private String lastname;
+	private Gender gender;
+	private Integer age;
+	private Integer fortune;
+	
+    // contructor with fields ...
+	public Person(String firstname, String lastname, Gender gender, Integer age, Integer fortune) {
+		super();
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.gender = gender;
+		this.age = age;
+		this.fortune = fortune;
+	}
+
+	public String getFirstname() {
+		return firstname;
+	}
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+	public String getLastname() {
+		return lastname;
+	}
+
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
+	}
+
+	public Gender getGender() {
+		return gender;
+	}
+
+	public void setGender(Gender gender) {
+		this.gender = gender;
+	}
+
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+	
+	public Integer getFortune() {
+		return fortune;
+	}
+
+	public void setFortune(Integer fortune) {
+		this.fortune = fortune;
+	}
+
+	@Override
+	public String toString() {
+		return "Person [firstname=" + firstname + ", lastname=" + lastname + ", gender=" + gender + ", age=" + age
+				+ ", fortune=" + fortune + "]";
+	}
+
+}
