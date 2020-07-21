@@ -3,7 +3,9 @@ package io.laidani.streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IntSummaryStatistics;
 import java.util.List;
@@ -16,9 +18,9 @@ import java.util.stream.Stream;
 
 public class MainClass {
 
-	private static boolean isNarcissistic(Integer n) {
-		int i=n;
-		int[] chiffres = new int[]{ 0, 0, 0, 0, 0, 0, 0, 0 };
+	private static boolean isNarcissistic(long n) {
+		long i=n;
+		long[] chiffres = new long[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		int j=0;
 		while (i != 0) {
 			chiffres[++j] = i%10;
@@ -44,6 +46,7 @@ public class MainClass {
 	
 	public static void main(String[] args) {
 		List<Integer> values = Arrays.asList(2,4,3,8,3,4,2,0,10,8,4,7,12,9,3,2,1,30,20,44,5);
+		System.out.println("The list : "+ values);
 		System.out.println("Display the square of first even number bigger than 4 from the list");
 		System.out.println(values
 		.stream()
@@ -58,11 +61,27 @@ public class MainClass {
 		System.out.println("Sum of all numbers is :" + totalValues(values, e -> true));
 		System.out.println("Sum of even numbers is :" + totalValues(values, e -> e%2 == 0));
 		
+		boolean b = values
+					.stream()
+					.anyMatch(e -> e%2+e%3+2%5 == 6);
+		System.out.println("is there any number which satisfy the condition e%2+e%3+2%5 == 6 ? " + b);
+		System.out.println("List of values ordered by [ e1%2*e2%3 - e2%2*e1%3 ] : " +
+				values.stream()
+				      .sorted((e1,e2) -> e1%2*e2%3 - e2%2*e1%3)
+				      .map(n -> n.toString())
+				      .collect(Collectors.joining(",","{", "}"))
+				);
+				
 		System.out.println("-----------------------------------------------------------");
-		IntStream
-		.range(10, 23)
-		.skip(5)
-		.forEach(System.out::println);
+		System.out.println("List of numbers <10,1000> skip(5) && limit(95) that are n=0[3] && (n=1[5] || n=2[5]) : " +
+				IntStream
+						.range(10, 1000)
+						.skip(5)
+						.limit(95)
+						.filter(n -> n%3==0 && ( n%5==1 || n%5==2))
+						.collect(ArrayList::new, ArrayList::add, ArrayList::addAll)
+			);		
+				
 		
 		System.out.println( "sum of number [0-10] is : " +
 		IntStream
@@ -70,26 +89,53 @@ public class MainClass {
 		.sum()
 		);
 		
-		System.out.println("Display Narcissistic Numbers between 0 to 10000 -----------------");
+		System.out.println("Display Narcissistic Numbers between 0 to 100.000 -----------------");
 		IntPredicate predicate = i -> isNarcissistic(i);
 		IntPredicate predicate2 = i -> i > 9;
 		
-		IntStream
-		.range(0, 10000)
-		.filter(predicate.and(predicate2))
-		.forEach(System.out::println);
+		long start = System.currentTimeMillis();
+		List<Integer> narNumbers = new ArrayList<>();  
+				IntStream	
+				            .rangeClosed(0, 100000)
+		        			.parallel()
+							.filter(predicate.and(predicate2))
+                            .forEach(n -> narNumbers.add(n));
 		
-		Stream.of("Mohamed","Athyl","Tamim","Evan")
-		.sorted()
+		long duration1 = System.currentTimeMillis() - start;
+		start = System.currentTimeMillis();
+		narNumbers.clear();	
+		              IntStream
+				      .range(0, 100000)
+		              .filter(predicate.and(predicate2))
+		              .forEach(n -> narNumbers.add(n));
+		long duration2 = System.currentTimeMillis() - start;
+		
+		System.out.println("The is " + narNumbers.size() + " narcissistic numbers between 10 and 100.000");
+		System.out.println("Parallel processing took " + duration1 + " ms");
+		System.out.println("Sequential processing took " + duration2 + " ms");
+		System.out.println("List of narcissistic numbers : " + 
+																narNumbers.stream()
+																           .sorted()
+																           .map(n -> Integer.toString(n))
+																           .collect(Collectors.joining(",", "{","}"))           
+				);
+		
+		System.out.println("---------------------------------------------------------------------");
+			
+		Stream.of("Mohamed","Athyl","Tamim","Evan","Stacy","Alex","Monica","Miles")
+		.sorted(Comparator.comparing(String::length))
 		.findFirst()
 		.ifPresent(System.out::println);
 		
-		System.out.println("List of sorted names that started with 'M' --------------------------------------------- ");
 		String[] names = {"Mohamed","Athyl","Tamim","Evan","Oliver", "Mark", "Evana", "Sara", "Anita", "Mourad"};
-		Arrays.stream(names)
-		.filter(n -> n.startsWith("M"))
-		.sorted()
-		.forEach(System.out::println);
+		System.out.println("List of sorted names that started with 'M' --------------------------------------------- ");
+		System.out.println("The list : "+ Arrays.stream(names).collect(Collectors.joining(",", "{", "}")));
+        System.out.println(
+         Arrays.stream(names)
+					.filter(n -> n.startsWith("M"))
+					.sorted()
+					.collect(Collectors.joining(" "))
+		);
 		
 		System.out.println("Average of square if distinct numbers      --------------------------------------------- ");
 		Arrays.stream(new int[] {3, 4, 6, 6, 6, 6, 6, 7, 9, 2, 5, 5, 7})
@@ -104,13 +150,16 @@ public class MainClass {
 		
 		System.out.println("List of sorted names that contain 'A' and started with 'M' ------------------------------------- ");
 		List<String> people = Arrays.asList("Mohamed","Athyl","Tamim","Evan","Oliver", "Mark", "Evana", "Sara", "Anita", "Mourad");
-		people
-		.stream()
-		.map(String::toUpperCase)
-		.filter(p -> p.contains("A"))
-		.filter(p -> p.startsWith("M"))
-		.sorted()
-		.forEach(System.out::println);
+		System.out.println(		people
+								.stream()
+								.map(String::toUpperCase)
+								.filter(p -> p.contains("A"))
+								.filter(p -> p.startsWith("M"))
+								.sorted()
+								.collect(Collectors.joining(",", "[", "]"))
+				          );	
+						
+		
 		
 		/*
 		 *  Valid Data example = A,45,4.33
